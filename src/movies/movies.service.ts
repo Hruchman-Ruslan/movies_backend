@@ -1,27 +1,72 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+
+import { MovieDto } from '@app/movies/dto/movie.dto';
+import { TmdbMovie, TmdbMoviesResponse } from '@app/movies/types/tmdb.types';
+
 import {
-  fetchGenres,
-  fetchPopularMovies,
   mapMovieToDto,
+  fetchGenres,
+  fetchMovies,
+  MovieType,
 } from '@app/utils/tmdb';
-import { MovieDto } from './dto/movie.dto';
-import { TmdbMovie } from './types/tmdb.types';
 
 @Injectable()
 export class MoviesService {
-  constructor(private readonly configService: ConfigService) {}
+  private apiKey: string;
+  private baseUrl: string;
+  private imageBaseUrl: string;
+  private genresMap?: Map<number, string>;
 
-  async getPopularMovies(page = 1): Promise<MovieDto[]> {
-    const apiKey = this.configService.get<string>('TMDB_API_KEY')!;
-    const baseUrl = this.configService.get<string>('TMDB_BASE_URL')!;
-    const imageBaseUrl = this.configService.get<string>('TMDB_IMAGE_BASE_URL')!;
+  constructor(private readonly configService: ConfigService) {
+    this.apiKey = this.configService.get<string>('TMDB_API_KEY')!;
+    this.baseUrl = this.configService.get<string>('TMDB_BASE_URL')!;
+    this.imageBaseUrl = this.configService.get<string>('TMDB_IMAGE_BASE_URL')!;
+  }
 
-    const genresMap = await fetchGenres(apiKey, baseUrl);
-    const { results } = await fetchPopularMovies(apiKey, baseUrl, page);
+  private async loadGenres() {
+    if (!this.genresMap) {
+      this.genresMap = await fetchGenres(this.apiKey, this.baseUrl);
+    }
+    return this.genresMap;
+  }
 
-    return results.map((movie: TmdbMovie) =>
-      mapMovieToDto(movie, genresMap, imageBaseUrl),
+  private async getMovies(
+    type: MovieType,
+    page = 1,
+  ): Promise<TmdbMoviesResponse<MovieDto>> {
+    const genresMap = await this.loadGenres();
+
+    const tmdbResponse = await fetchMovies<TmdbMovie>(
+      this.apiKey,
+      this.baseUrl,
+      type,
+      page,
     );
+
+    const moviesDto = tmdbResponse.results.map((movie) =>
+      mapMovieToDto(movie, this.imageBaseUrl, genresMap),
+    );
+
+    return {
+      ...tmdbResponse,
+      results: moviesDto,
+    };
+  }
+
+  getPopularMovies(page = 1) {
+    return this.getMovies('popular', page);
+  }
+
+  getNowPlayingMovies(page = 1) {
+    return this.getMovies('now_playing', page);
+  }
+
+  getTopRatingMovies(page = 1) {
+    return this.getMovies('top_rated', page);
+  }
+
+  getUpcomingMovies(page = 1) {
+    return this.getMovies('upcoming', page);
   }
 }

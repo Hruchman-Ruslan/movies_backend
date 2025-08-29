@@ -1,10 +1,22 @@
-import { MovieDto } from '@app/movies/dto/movie.dto';
 import { plainToInstance } from 'class-transformer';
-import {
-  TmdbGenresResponse,
-  TmdbMovie,
-  TmdbPopularMoviesResponse,
-} from '@app/movies/types/tmdb.types';
+
+import { MovieDto } from '@app/movies/dto/movie.dto';
+import { TmdbMovie, TmdbMoviesResponse } from '@app/movies/types/tmdb.types';
+
+export type MovieType = 'popular' | 'now_playing' | 'top_rated' | 'upcoming';
+
+export async function fetchMovies<T>(
+  apiKey: string,
+  baseUrl: string,
+  type: MovieType,
+  page = 1,
+): Promise<TmdbMoviesResponse<T>> {
+  const res = await fetch(
+    `${baseUrl}/movie/${type}?api_key=${apiKey}&language=en-US&page=${page}`,
+  );
+  if (!res.ok) throw new Error(`Failed to fetch ${type} movies`);
+  return res.json();
+}
 
 export async function fetchGenres(
   apiKey: string,
@@ -15,33 +27,30 @@ export async function fetchGenres(
   );
   if (!res.ok) throw new Error('Failed to fetch genres');
 
-  const { genres }: TmdbGenresResponse = await res.json();
+  const { genres }: { genres: { id: number; name: string }[] } =
+    await res.json();
   return new Map(genres.map(({ id, name }) => [id, name]));
 }
 
-export async function fetchPopularMovies(
-  apiKey: string,
-  baseUrl: string,
-  page = 1,
-): Promise<TmdbPopularMoviesResponse> {
-  const res = await fetch(
-    `${baseUrl}/movie/popular?api_key=${apiKey}&language=en-US&page=${page}`,
-  );
-  if (!res.ok) throw new Error('Failed to fetch popular movies');
-
-  return res.json();
-}
-
 export function mapMovieToDto(
-  { title, vote_average, poster_path, genre_ids }: TmdbMovie,
-  genresMap: Map<number, string>,
+  movie: TmdbMovie,
   imageBaseUrl: string,
+  genresMap?: Map<number, string>,
 ): MovieDto {
-  const result = {
-    title: title,
-    rating: vote_average,
-    poster: poster_path ? `${imageBaseUrl}${poster_path}` : null,
-    genres: genre_ids.map((id) => genresMap.get(id) ?? 'Unknown').join(', '),
-  };
-  return plainToInstance(MovieDto, result);
+  return plainToInstance(MovieDto, {
+    id: movie.id,
+    title: movie.title,
+    rating: movie.vote_average,
+    poster: movie.poster_path
+      ? `${imageBaseUrl}${movie.poster_path}`
+      : undefined,
+    backdrop: movie.backdrop_path
+      ? `${imageBaseUrl}${movie.backdrop_path}`
+      : undefined,
+    overview: movie.overview,
+    releaseDate: movie.release_date,
+    genres: genresMap
+      ? movie.genre_ids.map((id) => genresMap.get(id) ?? 'Unknown').join(', ')
+      : undefined,
+  });
 }
