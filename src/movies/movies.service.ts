@@ -2,14 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { MovieDto } from '@app/movies/dto/movie.dto';
-import { TmdbMovie, TmdbMoviesResponse } from '@app/movies/types/tmdb.types';
 
-import {
-  mapMovieToDto,
-  fetchGenres,
-  fetchMovies,
-  MovieType,
-} from '@app/utils/tmdb';
+import { ImageSize, TmdbList, TmdbMovie, TmdbMoviesResponse } from '@app/types';
+import { fetchGenres, fetchMovies, mapMovieToDto } from '@app/utils';
 
 @Injectable()
 export class MoviesService {
@@ -32,8 +27,9 @@ export class MoviesService {
   }
 
   private async getMovies(
-    type: MovieType,
+    type: TmdbList,
     page = 1,
+    imageSize: ImageSize = 'w500',
   ): Promise<TmdbMoviesResponse<MovieDto>> {
     const genresMap = await this.loadGenres();
 
@@ -45,7 +41,7 @@ export class MoviesService {
     );
 
     const moviesDto = tmdbResponse.results.map((movie) =>
-      mapMovieToDto(movie, this.imageBaseUrl, genresMap),
+      mapMovieToDto(movie, this.imageBaseUrl, imageSize, genresMap),
     );
 
     return {
@@ -54,19 +50,19 @@ export class MoviesService {
     };
   }
 
-  getPopularMovies(page = 1) {
-    return this.getMovies('popular', page);
+  getPopularMovies(page = 1, imageSize?: ImageSize) {
+    return this.getMovies('popular', page, imageSize);
   }
 
-  getNowPlayingMovies(page = 1) {
-    return this.getMovies('now_playing', page);
+  getNowPlayingMovies(page = 1, imageSize?: ImageSize) {
+    return this.getMovies('now_playing', page, imageSize);
   }
 
-  getTopRatingMovies(page = 1) {
-    return this.getMovies('top_rated', page);
+  getTopRatingMovies(page = 1, imageSize?: ImageSize) {
+    return this.getMovies('top_rated', page, imageSize);
   }
 
-  getUpcomingMovies(page = 1) {
-    return this.getMovies('upcoming', page);
+  getUpcomingMovies(page = 1, imageSize?: ImageSize) {
+    return this.getMovies('upcoming', page, imageSize);
   }
 }
