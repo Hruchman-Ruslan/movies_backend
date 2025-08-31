@@ -3,7 +3,13 @@ import { ConfigService } from '@nestjs/config';
 
 import { MovieDto } from '@app/movies/dto/movie.dto';
 
-import { ImageSize, TmdbList, TmdbMovie, TmdbMoviesResponse } from '@app/types';
+import {
+  BackdropSize,
+  PosterSize,
+  TmdbList,
+  TmdbMovie,
+  TmdbMoviesResponse,
+} from '@app/types';
 import { fetchGenres, fetchMovies, mapMovieToDto } from '@app/utils';
 
 @Injectable()
@@ -29,7 +35,8 @@ export class MoviesService {
   private async getMovies(
     type: TmdbList,
     page = 1,
-    imageSize: ImageSize = 'w500',
+    posterSize?: PosterSize,
+    backdropSize?: BackdropSize,
   ): Promise<TmdbMoviesResponse<MovieDto>> {
     const genresMap = await this.loadGenres();
 
@@ -41,7 +48,13 @@ export class MoviesService {
     );
 
     const moviesDto = tmdbResponse.results.map((movie) =>
-      mapMovieToDto(movie, this.imageBaseUrl, imageSize, genresMap),
+      mapMovieToDto(
+        movie,
+        this.imageBaseUrl,
+        posterSize,
+        backdropSize,
+        genresMap,
+      ),
     );
 
     return {
@@ -50,19 +63,19 @@ export class MoviesService {
     };
   }
 
-  getPopularMovies(page = 1, imageSize?: ImageSize) {
-    return this.getMovies('popular', page, imageSize);
+  getPopularMovies(page = 1, posterSize?: PosterSize) {
+    return this.getMovies('popular', page, posterSize);
   }
 
-  getNowPlayingMovies(page = 1, imageSize?: ImageSize) {
-    return this.getMovies('now_playing', page, imageSize);
+  getNowPlayingMovies(page = 1, posterSize?: PosterSize) {
+    return this.getMovies('now_playing', page, posterSize);
   }
 
-  getTopRatingMovies(page = 1, imageSize?: ImageSize) {
-    return this.getMovies('top_rated', page, imageSize);
+  getTopRatingMovies(page = 1, posterSize?: PosterSize) {
+    return this.getMovies('top_rated', page, posterSize);
   }
 
-  getUpcomingMovies(page = 1, imageSize?: ImageSize) {
-    return this.getMovies('upcoming', page, imageSize);
+  getUpcomingMovies(page = 1, backdropSize?: BackdropSize) {
+    return this.getMovies('upcoming', page, undefined, backdropSize);
   }
 }

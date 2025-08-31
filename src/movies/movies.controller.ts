@@ -8,22 +8,22 @@ export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
   @Get('popular')
-  getPopularMovies(@Query() { page, imageSize }: PaginationDto) {
-    return this.moviesService.getPopularMovies(page, imageSize);
+  getPopularMovies(@Query() { page, posterSize }: PaginationDto) {
+    return this.moviesService.getPopularMovies(page, posterSize);
   }
 
   @Get('now_playing')
-  getNowPlayingMovies(@Query() { page, imageSize }: PaginationDto) {
-    return this.moviesService.getNowPlayingMovies(page, imageSize);
+  getNowPlayingMovies(@Query() { page, posterSize }: PaginationDto) {
+    return this.moviesService.getNowPlayingMovies(page, posterSize);
   }
 
   @Get('top_rated')
-  getTopRatingMovies(@Query() { page, imageSize }: PaginationDto) {
-    return this.moviesService.getTopRatingMovies(page, imageSize);
+  getTopRatingMovies(@Query() { page, posterSize }: PaginationDto) {
+    return this.moviesService.getTopRatingMovies(page, posterSize);
   }
 
   @Get('upcoming')
-  getUpcomingMovies(@Query() { page, imageSize }: PaginationDto) {
-    return this.moviesService.getUpcomingMovies(page, imageSize);
+  getUpcomingMovies(@Query() { page, backdropSize }: PaginationDto) {
+    return this.moviesService.getUpcomingMovies(page, backdropSize);
   }
 }

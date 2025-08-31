@@ -1,6 +1,6 @@
 export type TmdbList = 'popular' | 'now_playing' | 'top_rated' | 'upcoming';
 
-export type ImageSize =
+export type PosterSize =
   | 'w92'
   | 'w154'
   | 'w185'
@@ -8,6 +8,8 @@ export type ImageSize =
   | 'w500'
   | 'w780'
   | 'original';
+
+export type BackdropSize = 'w300' | 'w780' | 'w1280' | 'original';
 
 export interface TmdbMovie {
   id: number;
